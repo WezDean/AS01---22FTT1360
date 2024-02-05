@@ -1,19 +1,36 @@
 import streamlit as st
-import time
-import numpy as np
+import pandas as pd
 
-progress_bar = st.sidebar.progress(0)
-status_text = st.sidebar.empty()
-last_rows = np.random.rand(1,1)
-chart = st.line_chart(last_rows)
+# Load your dataset
+# Assuming your dataset is in a CSV file named 'gun_violence_data.csv'
+df = pd.read_csv('gun_violence_data.csv')
 
-for i in range(1,101):
-    new_rows = last_rows[-1,:] + np.random.rand(50,1).cumsum(axis=0)
-    status_text.text('%i%% Complete' % i)
-    # ADDING NEW ROWS TO THE LINE CHART
-    chart.add_rows(new_rows)
-    progress_bar.progress(i)
-    last_rows = new_rows
-    time.sleep(0.05)
+# Sidebar filters
+st.sidebar.header('Filters')
+year_filter = st.sidebar.slider('Select Year:', min_value=df['year'].min(), max_value=df['year'].max())
+intent_filter = st.sidebar.selectbox('Select Intent:', df['intent'].unique())
+race_filter = st.sidebar.selectbox('Select Race:', df['race'].unique())
 
-st.button("Re-run")
+# Apply filters to the dataset
+filtered_df = df[(df['year'] == year_filter) & (df['intent'] == intent_filter) & (df['race'] == race_filter)]
+
+# Main content
+st.title('Gun Violence Insights')
+
+# Display filtered data
+st.subheader('Filtered Data:')
+st.dataframe(filtered_df)
+
+# Insights and visualizations
+st.subheader('Insights and Visualizations')
+
+# Example visualization: Bar chart of incidents by month
+monthly_incidents = filtered_df.groupby('month')['Unnamed: 0'].count()
+st.bar_chart(monthly_incidents)
+
+# Additional components and insights can be added based on your requirements
+
+# Footer
+st.sidebar.markdown('Created with ❤️ by Waiz')
+
+# Run the app with streamlit run gun_violence_app.py in your terminal
