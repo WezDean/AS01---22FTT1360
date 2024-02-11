@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# Load dataset
-csv = "C:/Users/waizz/OneDrive/Documents/School/Semester 4/DSCI/Codes/AS01 - 22FTT1360/guns_cleaned.csv"
-df = pd.read_csv(csv)
+# Load the cleaned dataset
+df = pd.read_csv('guns_cleaned.csv')
 
 # Sidebar filters
 st.sidebar.header('Filters')
@@ -14,23 +15,22 @@ race_filter = st.sidebar.selectbox('Select Race:', df['race'].unique())
 # Apply filters to the dataset
 filtered_df = df[(df['year'] == year_filter) & (df['intent'] == intent_filter) & (df['race'] == race_filter)]
 
-# Main content
+# Title
 st.title('Gun Violence Insights')
-
-# Display filtered data
-st.subheader('Filtered Data:')
-st.dataframe(filtered_df)
 
 # Insights and visualizations
 st.subheader('Insights and Visualizations')
 
-# Example visualization: Bar chart of incidents by month
-monthly_incidents = filtered_df.groupby('month')['Unnamed: 0'].count()
-st.bar_chart(monthly_incidents)
+# Distribution of victim ages
+st.subheader('Distribution of Victim Ages')
+plt.figure(figsize=(10, 6))
+sns.histplot(filtered_df['age'], bins=20, kde=True, color='skyblue', edgecolor='black')
+plt.xlabel('Age')
+plt.ylabel('Frequency')
+plt.title('Distribution of Victim Ages')
+st.pyplot()
 
-# Additional components and insights can be added based on your requirements
+# Additional insights and visualizations can be added here
 
 # Footer
-st.sidebar.markdown('Created with ❤️ by Waiz')
-
-# Run the app with streamlit run gun_violence_app.py in your terminal
+st.sidebar.markdown('Created with ❤️ by Your Name')
