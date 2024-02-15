@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd 
 
 st.title('Gun Violence in America')
-st.caption('Did you know? Each day 12 children die from gun violence in America. Another 32 are shot and injured.')
-st.image("GunOverview.jpg", width=500)
+st.markdown('Did you know? Each day 12 children die from gun violence in America. Another 32 are shot and injured.')
+st.image("M14.gif", width=500)
 
 st.subheader('Context')
 st.markdown('This Application aims to show In-depth Analysis of Gun Violence across America, navigate the sidebar on the left to display visualizations.')
