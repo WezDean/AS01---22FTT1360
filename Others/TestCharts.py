@@ -23,18 +23,15 @@ class DonutPieChart:
         
         return donut_chart
 
-class Histogram:
+class AgeHistogram:
     def __init__(self, data):
         self.data = data
         
     def generate_chart(self):
-        # Year filter
-        years = self.data['year'].unique()
-        all_years = st.checkbox('All Years', value=True)
-        if all_years:
-            selected_years = years
-        else:
-            selected_years = st.multiselect('Select Years:', years, default=years)
+        # Age filter using a slider
+        min_age = int(self.data['age'].min())
+        max_age = int(self.data['age'].max())
+        age_range = st.slider('Select Age Range:', min_value=min_age, max_value=max_age, value=(min_age, max_age))
 
         # Intent filter
         intent_options = ['All'] + list(self.data['intent'].unique())
@@ -45,7 +42,7 @@ class Histogram:
         race_filter = st.selectbox('Select Race:', race_options)
 
         # Apply filters to the dataset
-        filtered_df = self.data[self.data['year'].isin(selected_years)]
+        filtered_df = self.data[(self.data['age'] >= age_range[0]) & (self.data['age'] <= age_range[1])]
 
         if intent_filter != 'All':
             filtered_df = filtered_df[filtered_df['intent'] == intent_filter]
@@ -65,6 +62,7 @@ class Histogram:
         )
 
         return hist
+
 
 class IntentRaceBarChart:
     def __init__(self, data):
@@ -118,31 +116,33 @@ df = pd.read_csv('guns_cleaned.csv')
 
 # Instances of Visualizaitions
 donut_chart = DonutPieChart(df)
-histogram = Histogram(df)
+histogram = AgeHistogram(df)
 barchart = IntentRaceBarChart(df)
 gender_pie_chart = GenderPieChart(df)
 
 # Display all visualizations side by side using Streamlit columns
+
+
+st.caption("Education Level Chart")
+hist_chart = histogram.generate_chart()
+st.altair_chart(hist_chart, use_container_width=True)
+
+
 col1, col2 = st.columns(2)
 
 with col1:
-    st.caption("Education Level Chart")
-    hist_chart = histogram.generate_chart()
-    st.altair_chart(hist_chart, use_container_width=True)
-
-with col2:
     st.caption("Overall Races")
     donut_chart = donut_chart.generate_chart()
     st.altair_chart(donut_chart, use_container_width=True)
 
+with col2:
     st.caption("Male to Female Ratio")
     pie_chart = gender_pie_chart.generate_chart()
     st.altair_chart(pie_chart, use_container_width=True)
 
-col3, _ = st.columns(2)
-with col3:
-    st.caption("Age & Intents Bar Chart")
-    scatter_plot = barchart.generate_chart()
-    st.altair_chart(scatter_plot, use_container_width=False)
 
-histogram = Histogram(df)
+st.caption("Age & Intents Bar Chart")
+scatter_plot = barchart.generate_chart()
+st.altair_chart(scatter_plot, use_container_width=False)
+
+histogram = AgeHistogram(df)
