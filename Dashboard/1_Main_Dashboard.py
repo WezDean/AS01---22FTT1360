@@ -14,9 +14,9 @@ with col1:
 
 with col2:
     st.subheader('Context')
-    st.caption('This dataset includes information about gun-death in the US in the years 2012-2014.')
+    st.caption('The main aim of this dashboard is to provide insights and additional analysis as to the reasons why the gun violence in America is high through meaningful visualizations.')
     st.subheader('Content')
-    st.caption("The data includes data regarding the victim's age, sex, race, education, intent, time (month and year) and place of death, and whether or not police was at the place of death.")
+    st.caption("The dashboard features six visualizations revealing factors affecting gun violence in America, with additional dashboards covering related conditions. Users can interact with filters to further understand the data.")
     st.subheader('Acknowledgments')
     st.caption("This Web Application was made possible by [FiveThirtyEight's Gun Deaths in America project](https://fivethirtyeight.com/features/gun-deaths/).")
 
@@ -77,7 +77,8 @@ class DonutPieChart:
             tooltip=['intent', 'count']
         ).properties(
             width=400,
-            height=400
+            height=400,
+            title='Location & Intent of Victims'
         )
         
         return donut_chart
@@ -116,8 +117,9 @@ class AgeHistogram:
             color=alt.Color('education:N', scale=alt.Scale(scheme='set1'), legend=alt.Legend(orient='left')),  # Set legend orientation to left
             tooltip=['education:N']  # Add tooltip for education
         ).properties(
-            width=500,  # Set width to 600 pixels
-            height=400  # Set height to 400 pixels
+            width=500, 
+            height=400,
+            title='Age of Victims by Education, Race & Intents'
         )
 
         return hist
@@ -145,14 +147,17 @@ class TimeSeriesLinePlot:
         # Calculate the count of gun deaths over time
         gun_deaths_over_time = filtered_data.groupby('Date').size().reset_index(name='count')
 
+        # Determine the y-axis domain dynamically based on the range of count values
+        y_domain = (0, gun_deaths_over_time['count'].max())  # Adjusted to use the maximum count value
+
         # Create a time series line plot using Altair
         line_plot = alt.Chart(gun_deaths_over_time).mark_line(color='darkorange', point=True).encode(
             x='Date:T',
-            y=alt.Y('count:Q', scale=alt.Scale(domain=('0', '3200'))),
+            y=alt.Y('count:Q', scale=alt.Scale(domain=y_domain)),  # Dynamic y-axis scale
         ).properties(
             width=800,
             height=400,
-            title='Trend in Gun Deaths Over Months'
+            title='Trend in Gun Violence Over Months'
         )
 
         return line_plot
@@ -187,7 +192,7 @@ class GunDeathTrendByIntentOverTime:
         ).properties(
             width=800,
             height=400,
-            title='Gun Death Trend by Intent Over Time'
+            title='Gun Death Trends by Intent Over Time'
         )
 
         return stacked_area_chart
@@ -199,15 +204,15 @@ class LocationIntentDistributionChart:
     def generate_chart(self):
         # Relevant filters
         location_options = ['All'] + list(self.data['place'].unique())
-        selected_location = st.selectbox('Select Location:', location_options, index=0, key='location_filter')
+        selected_locations = st.multiselect('Select Locations:', location_options, default=['All'], key='location_filter')
         
         intent_options = ['All'] + list(self.data['intent'].unique())
         selected_intents = st.multiselect('Select Intents:', intent_options, default=['All'], key='intent_filter')
         
         # Apply filters to the dataset
         filtered_df = self.data.copy()
-        if selected_location != 'All':
-            filtered_df = filtered_df[filtered_df['place'] == selected_location]
+        if 'All' not in selected_locations:
+            filtered_df = filtered_df[filtered_df['place'].isin(selected_locations)]
         if 'All' not in selected_intents:
             filtered_df = filtered_df[filtered_df['intent'].isin(selected_intents)]
 
@@ -218,7 +223,7 @@ class LocationIntentDistributionChart:
         stacked_bar_chart = alt.Chart(location_intent_counts).mark_bar().encode(
             x=alt.X('place:N', title='Location'),
             y=alt.Y('count:Q', title='Count'),
-            color=alt.Color('intent:N', scale=alt.Scale(scheme='category10'), title='Intent'),
+            color=alt.Color('intent:N', scale=alt.Scale(scheme='viridis'), title='Intent'),
             tooltip=['place', 'intent', 'count']
         ).properties(
             width=700,
@@ -248,19 +253,17 @@ age_race_chart.age_range = st.slider('Select Age Range:', min_value=df['age'].mi
 bin_size_key = hash('bin_size_slider')  # Generate a unique key for the bin size slider
 age_race_chart.bin_size = st.slider('Select Bin Size:', min_value=5, max_value=50, value=30, key=bin_size_key)
 
-st.caption("Age Distribution of Victims by Race")
+
 age_race_chart = age_race_chart.generate_chart()
 st.altair_chart(age_race_chart, use_container_width=True)
 
 col3, col4 = st.columns(2)
 
 with col3:
-    st.caption("Location & Intent")
     donut_chart = donut_chart.generate_chart()
     st.altair_chart(donut_chart, use_container_width=True)
 
 with col4:
-    st.caption("Education Level Chart")
     hist_chart = histogram.generate_chart()
     st.altair_chart(hist_chart, use_container_width=True)
 
@@ -269,19 +272,15 @@ location_key = 'Location Filter'  # Unique key for location filter
 intent_key = 'Intent Filter'  # Unique key for intent filter
 time_chart.location_filter = st.selectbox('Select Location:', ['All'] + list(df['place'].unique()), key=location_key)
 time_chart.intent_filter = st.selectbox('Select Intent:', ['All'] + list(df['intent'].unique()), key=intent_key)
-
-st.caption("Trend Over Months")
 time_chart = time_chart.generate_chart()
 st.altair_chart(time_chart, use_container_width=True)
 
 col5, col6 = st.columns(2)
 
 with col5:
-    st.caption('Gun Violence Incidents by Location and Intent')
     bar_chart = location_intent_chart.generate_chart()
     st.altair_chart(bar_chart, use_container_width=True)
 
 with col6:
-    st.caption('Gun Death Trend by Intent Over Time')
     trend_chart = trend_chart.generate_chart()
     st.altair_chart(trend_chart, use_container_width=True)
